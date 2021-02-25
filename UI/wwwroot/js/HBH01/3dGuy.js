@@ -5,7 +5,7 @@ import {SimpleOrbitControls} from "./orbitctrl.js";
 import {math} from './math.js';
 
 
-
+import {entity_manager} from './entity-manager.js';
 
 
 import {third_person_camera} from './third-person-camera.js';
@@ -18,9 +18,10 @@ import {gltf_component} from './gltf-component.js';
 import {player_input} from './player-input.js';
 
 import {remotePlayer_input} from './remotePlayer_input.js';
-
+import {remotePlayer_entity} from './remotePlayer-entity.js';
 import {npc_entity} from './npc-entity.js';
-
+spatial_grid_controller
+import {spatial_grid_controller} from './spatial-grid-controller.js';
 import {spatial_hash_grid} from './spatial-hash-grid.js';
 //import {ui_controller} from './ui-controller.js';
 // import {health_bar} from './health-bar.js';
@@ -65,13 +66,19 @@ void main() {
 
 export const ThreeD_Guy = (() => {
 
-  class ThreeD_Guy extends entity.Component {
+  class ThreeD_Guy {
     constructor(params) {
-      super();
+     
       this._input = new StInput(window);
-     // this.UIguy = this.GetComponent('Ui_Guy');
-      this._entitymanager= params.entitymanager;
-     // this.UIguy = this._entityManager.Get('HBH01').GetComponent('UIController');;
+    
+      this._ui= params.ui;
+      this._cli=params.cli;
+
+
+      this._grid = new spatial_hash_grid.SpatialHashGrid(
+        [[-1000, -1000], [1000, 1000]], [100, 100]);
+      this._entityManager = new entity_manager.EntityManager();
+
       this.glideHero = new Glide('.glide', {
         type: "carousel",
         touchAngle: 45,
@@ -98,7 +105,7 @@ export const ThreeD_Guy = (() => {
       this._threejs = new THREE.WebGLRenderer({antialias: true, alpha: true, canvas: this._canvas});
 
         Split(['#view', '#controls'], {  // eslint-disable-line new-cap
-          sizes: [0, 100],
+          sizes: [90, 10],
           minSize: 1,
           elementStyle: (dimension, size, gutterSize) => {
             return {
@@ -178,13 +185,70 @@ export const ThreeD_Guy = (() => {
       this._SimpleOrbitControls = new SimpleOrbitControls.SimpleOrbitControls(this._threejs, this._scene, this._BirdViewCAM );
 
       this._LoadSky();
+     // this._LoadPlayer();
+     this._LoadRemotePlayer();
       this._LoadClouds();
-      this._LoadFoliage();
-      this._LoadPlayer();
+      //this._LoadFoliage();
+
+      this._previousBeat = null;
+      this._Beat();
+
+
       
+      
+      //
 
     }
   
+
+    _Beat() {
+      requestAnimationFrame((t) => {
+        if (this._previousBeat === null) {
+          this._previousBeat = t;
+        }
+  
+        this._Beat();
+  
+     
+       
+       // this._threejs.render(this._scene, this._camera);
+        this._Step(t - this._previousBeat);
+        this._previousBeat = t;
+      });
+    }
+  
+    _Step(timeElapsed) {
+      const timeElapsedS = Math.min(1.0 / 30.0, timeElapsed * 0.001);
+      
+      // this._UpdateSun();
+  
+// const h = (async () => {
+      //   this._cli.printPrompt()
+      //   await this._cli.type('echo "Creating Terminal"')
+      //
+      // })()
+      this._UpdateOrbitControls(timeElapsed);
+      if (this._resizeRendererToDisplaySize(this._threejs)) {
+        // ui.UpdateGlider();
+        const canvas = this._threejs.domElement;
+        this._camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        this._camera.updateProjectionMatrix();
+         this._BirdViewCAM.aspect = canvas.clientWidth / canvas.clientHeight;
+         this._BirdViewCAM.updateProjectionMatrix();
+
+
+      }
+
+      this._threejs.render(this._scene, this._BirdViewCAM );    
+      this._input.endFrame();
+
+
+
+      this._entityManager.Update(timeElapsed);
+    }  
+
+
+
     InitComponent() {
    //   this._LoadUI();
      
@@ -236,151 +300,7 @@ export const ThreeD_Guy = (() => {
 
 
     }
-    _LoadUI() {
 
-
-      // tween.oncomplete(function(){
-      //    
-      //     alert("done tweening!")
-      // });
-
-      // This code is only related to handling the split.
-      // Our three.js code has not changed
-      //  Split(['#view', '#controls'], {  // eslint-disable-line new-cap
-      //    sizes: [10, 90],
-      //    minSize: 50,
-      //    elementStyle: (dimension, size, gutterSize) => {
-      //      return {
-      //        'flex-basis': `calc(${size}% - ${gutterSize}px)`,
-      //      };
-      //    },
-      //    gutterStyle: (dimension, gutterSize) => {
-      //      return {
-      //        'flex-basis': `${gutterSize}px`,
-      //      };
-      //    },
-      //  });
-      //
-
-      let ActiveFrames = document.getElementById("ActiveFrames");
-      //
-      // @* <li class="slider__frame glide__slide"><img src="https://source.unsplash.com/1600x900/?tunisia" alt="img"></li> *@
-      // @* <li class="slider__frame glide__slide"><img src="https://source.unsplash.com/1600x900/?earth" alt="img"></li> *@
-
-      // <li class="slider__frame glide__slide"><img src="https://source.unsplash.com/1600x900/?Germany" alt="img"></li>
-      let g = document.createElement('li');
-      g.setAttribute("class", "slider__frame glide__slide");
-      let div = document.createElement('img');
-
-
-      div.setAttribute("src", "https://source.unsplash.com/1600x900/?dna");
-      g.appendChild(div);
-
-      ActiveFrames.appendChild(g);
-
-
-      g = document.createElement('li');
-      g.setAttribute("class", "slider__frame glide__slide");
-      div = document.createElement('img');
-      div.setAttribute("src", "https://source.unsplash.com/1600x900/?Life");
-      g.appendChild(div);
-
-      ActiveFrames.appendChild(g);
-
-
-      g = document.createElement('li');
-      g.setAttribute("class", "slider__frame glide__slide");
-      div = document.createElement('img');
-      div.setAttribute("src", "https://source.unsplash.com/1600x900/?Space");
-      g.appendChild(div);
-
-      ActiveFrames.appendChild(g);
-
-      g = document.createElement('li');
-      g.setAttribute("class", "slider__frame glide__slide");
-      div = document.createElement('img');
-      div.setAttribute("src", "https://source.unsplash.com/1600x900/?Aliens");
-      g.appendChild(div);
-
-      ActiveFrames.appendChild(g);
-      this.glideHero.update();
-      //  var g = document.createElement('li');
-      //  g.setAttribute("class", "slider__frame glide__slide");
-      //  var div=document.createElement('div');
-      //
-      // div.setAttribute("id","cliContainer");
-      //  div.setAttribute("class","terminal");
-      //
-      //  g.appendChild(div);
-      //
-      //  ActiveFrames.appendChild(g);
-
-     // this.UpdateGlider();
-
-      // document.getElementById('cliContainer').addEventListener('keydown', event => {
-
-      //   this.Attention = "Cli";
-      //   this._input._resetAll();
-      //   if (this._cli) {
-      //     if (event.key === "Enter") {
-      //       this._cli.enterKey();
-      //       this._cli.println("");
-      //       return;
-      //     }
-      //     this._cli.type(event.key);
-      //     // this._cli.printPrompt();
-      //     //   alert(event.key);
-      //   }
-      // })
-
-      // document.getElementById('c').addEventListener('click', event => {
-
-      // this.Attention = "Canvas";
-
-      //   this._cli.type("Attention : " + this.Attention)
-      //   this._cli.println("");
-      //   this._cli.printPrompt();
-      //   this._cli.printCursor();
-      //   // this._input._resetAll();
-      // })
-
-      // document.getElementById('controls').addEventListener('mousedown', event => {
-
-      //   this.Attention = "Controls";
-      //   this._cli.type("Attention : " + this.Attention);
-      //   this._cli.println("");
-      //   this._cli.printPrompt();
-      //   this._cli.printCursor();
-      //   this._input._resetAll();
-      // })
-
-
-      // var userSelection = document.getElementsByClassName('gutter');
-      // for (var i = 0; i < userSelection.length; i++) {
-      //   (function (index) {
-      //     userSelection[index].addEventListener("mousedown", function () {
-
-      // // this.Attention = "Gutter";
-      // // this._cli.type("Attention : " + this.Attention)
-      // // this._cli.println();
-      // // this._cli.printPrompt();
-      // // this._cli.printCursor();
-
-      //       //         this._input._resetAll();
-      //     })
-      //   })(i);
-      // }
-      // document.getElementById('cliContainer').addEventListener('mousedown', event => {
-
-      //   this.Attention = "Cli";
-      //   this._input._resetAll();
-      // })
-
-
-      /* global Split */
-
-
-    }
     Update(timeInSeconds) {
       // const h = (async () => {
       //   this._cli.printPrompt()
@@ -389,6 +309,8 @@ export const ThreeD_Guy = (() => {
       // })()
       this._UpdateOrbitControls(timeInSeconds);
       if (this._resizeRendererToDisplaySize(this._threejs)) {
+
+        this._cli.Breathe2();
         // ui.UpdateGlider();
         const canvas = this._threejs.domElement;
         this._camera.aspect = canvas.clientWidth / canvas.clientHeight;
@@ -464,9 +386,9 @@ export const ThreeD_Guy = (() => {
           scale: Math.random() * 5 + 10,
           emissive: new THREE.Color(0x808080),
         }));
-        e.SetPosition(pos);
-        this._entityManager.Add(e);
-        e.SetActive(false);
+         e.SetPosition(pos);
+        // //this._entityManager.Add(e);
+        // e.SetActive(false);
       }
     }
 
@@ -497,11 +419,11 @@ export const ThreeD_Guy = (() => {
           receiveShadow: true,
           castShadow: true,
         }));
-        e.AddComponent(
-            new spatial_grid_controller.SpatialGridController({grid: this._grid}));
+        // e.AddComponent(
+        //     new spatial_grid_controller.SpatialGridController({grid: this._grid}));
         e.SetPosition(pos);
-        this._entityManager.Add(e);
-        e.SetActive(false);
+        // this._entityManager.Add(e);
+        // e.SetActive(false);
       }
     }
 
@@ -694,6 +616,30 @@ export const ThreeD_Guy = (() => {
        }*/
     }
 
+
+    _LoadRemotePlayer(id) {
+
+      const npc = new entity.Entity();
+      npc.AddComponent(new remotePlayer_entity.NPCController({
+          camera: this._camera,
+          scene: this._scene,
+
+      }));
+      npc.AddComponent(new remotePlayer_input.BasicCharacterControllerInput());
+
+
+       npc.AddComponent(
+           new spatial_grid_controller.SpatialGridController({grid: this._grid}));
+
+     //  npc.AddComponent(new attack_controller.AttackController({timing: 0.35}));
+      npc.SetPosition(new THREE.Vector3(
+          (Math.random() * 2 - 1) * 7000,
+          0,
+          (Math.random() * 2 - 1) * 6900));
+       this._entityManager.Add(npc);
+
+
+  }
 
 
 

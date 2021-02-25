@@ -1,52 +1,16 @@
-import {entity} from './entity.js';
 
 
 
 export const Ui_Guy = (() => {
 
-  class Ui_Guy extends entity.Component {
+  class Ui_Guy {
     constructor(params) {
-      super();
       this._params = params;
-      this._quests = {};
-      this.Isgliding = true;
-      // this.glideHero = new Glide('.glide', {        type: "carousel",
-      //   touchAngle: 45,
-      //   focusAt: 1,
-      //   startAt: 1,
-      //   perView: 1,
-      //   keyboard: false,
-      //   gap: 5,
-      //   autoplay: false,
-      //   peek: {
-      //     before: 100,
-      //     after: 50
-      //   },
-      //
-      // })
-
       this.InitComponent();
     }
 
     InitComponent() {
       this._LoadUI();
-
-      //this._iconBar = {
-      //  stats: document.getElementById('icon-bar-stats'),
-      //  inventory: document.getElementById('icon-bar-inventory'),
-      //  quests: document.getElementById('icon-bar-quests'),
-      //};
-//
-      //this._ui = {
-      //  inventory: document.getElementById('inventory'),
-      //  stats: document.getElementById('stats'),
-      //  quests: document.getElementById('quest-journal'),
-      //};
-
-      // this._iconBar.inventory.onclick = (m) => { this._OnInventoryClicked(m); };
-      // this._iconBar.stats.onclick = (m) => { this._OnStatsClicked(m); };
-      // this._iconBar.quests.onclick = (m) => { this._OnQuestsClicked(m); };
-      // this._HideUI();
     }
     _LoadUI() {
 
@@ -294,6 +258,11 @@ export const Ui_Guy = (() => {
 
 
     }
+
+
+    Remount2 = function(){
+      this.glideHero.update();
+      }
 
 
     Remount() {
