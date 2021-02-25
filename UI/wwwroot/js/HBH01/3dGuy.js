@@ -37,7 +37,8 @@ import {spatial_hash_grid} from './spatial-hash-grid.js';
 //import TWEEN from "../js/tweenmin.js";
 //import {HBH00} from "./HBH01.js";
 
-
+import {quest_component} from './quest-component.js';
+import {attack_controller} from './attacker-controller.js';
 
 const _VS = `
 varying vec3 vWorldPosition;
@@ -74,7 +75,149 @@ export const ThreeD_Guy = (() => {
       this._ui= params.ui;
       this._cli=params.cli;
 
+      this._cli.Breathe2();
 
+      this.InitComponent();  
+
+    }
+  
+
+    _Beat() {
+      requestAnimationFrame((t) => {
+        if (this._previousBeat === null) {
+          this._previousBeat = t;
+        }
+  
+        this._Beat();
+
+        
+        this._Step(t - this._previousBeat);
+        this._previousBeat = t;
+      });
+    }
+  
+    _Step(timeElapsed) {
+      const timeElapsedS = Math.min(1.0 / 60.0, timeElapsed * 0.001);
+    
+      //
+  
+// const h = (async () => {
+      //   this._cli.printPrompt()
+      //   await this._cli.type('echo "Creating Terminal"')
+      //
+      // })()
+      this._UpdateOrbitControls(timeElapsed);
+      if (this._resizeRendererToDisplaySize(this._threejs)) {
+        // ui.UpdateGlider();
+        const canvas = this._threejs.domElement;
+        this._camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        this._camera.updateProjectionMatrix();
+         this._BirdViewCAM.aspect = canvas.clientWidth / canvas.clientHeight;
+         this._BirdViewCAM.updateProjectionMatrix();
+
+
+      }
+      this._UpdateSun();
+      this._threejs.render(this._scene, this._RenderCam );    
+      
+
+
+      this._entityManager.Update(timeElapsedS);
+                 if (this._input.released('c')) {
+
+                  if (this._RenderCam==this._BirdViewCAM){
+
+                    this._RenderCam= this._camera;
+
+                  }
+                  else  {
+
+                    this._RenderCam= this._BirdViewCAM;
+                  }
+                }
+
+                  if (this._input.released('v')) {
+
+                   this._LoadRemotePlayer("e");}
+
+                   
+                  if (this._input.released('f')) {
+
+                    this._LoadFoliage();}
+
+
+                    if (this._input.released('b')) {
+
+                      this._LoadPlayer();}
+
+
+      //  const h = (async () => {
+      //      this._cli.printprompt()
+      //     await this._cli.type('let cli= new cli()')
+      //     this._cli.printprompt("cli : i exist !")
+      //    this._loadplayer();
+         
+      //     this._cli.println("welcome to digital playground, a visual os")
+      //     await this._cli.type('version: 0.8 pre alpha' + 'build'+'00068');
+      //     this._cli.println("press b to load the camera man")
+      //     this._cli.println("")
+      //     this._cli.printprompt()
+   //      var elem = this._cli.container;
+     //    elem.scrolltop = elem.scrollheight;
+   //   })()
+  
+  
+
+
+
+      this._input.endFrame();
+
+    }  
+
+    _UpdateSun() {
+
+
+     
+
+      const player = this._entityManager.Get('player');
+
+      if (player) {
+          const pos = player._position;
+          this._sun.position.copy(pos);
+          this._sun.position.add(new THREE.Vector3(-100, 100, 100));
+          this._sun.target.position.copy(pos);
+          this._sun.updateMatrixWorld();
+          this._sun.target.updateMatrixWorld();
+      }
+      //const ui = this._entityManager.Get('ui').GetComponent('');
+
+
+      //if (ui) {
+      //    ui.UIController.Isgliding = false;
+      //}
+      
+ 
+
+  }
+
+
+    InitComponent() {
+   //   this._LoadUI();
+     
+      // if (this._cli) {
+      //  // this._inputCli = new StInput(this._cli.container)
+      //   const h = (async () => {
+      //     this._cli.printPrompt()
+      //     await this._cli.type('I am ThreeD Guy , i create cool animations! , and render epic multiplayer games ! ')
+     
+      //   })()
+
+
+
+
+      // }
+  
+    
       this._grid = new spatial_hash_grid.SpatialHashGrid(
         [[-1000, -1000], [1000, 1000]], [100, 100]);
       this._entityManager = new entity_manager.EntityManager();
@@ -99,7 +242,7 @@ export const ThreeD_Guy = (() => {
 
 
       this._quests = {};
-      this._cli = new DemoCLI("#cliContainer");
+     
       this._canvas = document.querySelector('#c');
       this._view = document.querySelector('#view');
       this._threejs = new THREE.WebGLRenderer({antialias: true, alpha: true, canvas: this._canvas});
@@ -128,7 +271,7 @@ export const ThreeD_Guy = (() => {
 
        this._BirdViewCAM = new THREE.PerspectiveCamera(fov, aspect, near, far);
        this._BirdViewCAM.position.set(100, 100, 25);
-//       // //  this._camera.position.set(100,100,100);
+      this._camera.position.set(100,100,100);
 //     this._BirdViewCAM.lookAt(new THREE.Vector3(0, 0, 0));
       
       this._camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -140,16 +283,16 @@ export const ThreeD_Guy = (() => {
 
            // // create some random cubes
         // create cube geometry
-        var geometry = new THREE.BoxGeometry(1, 1, 1);
-        for (var i = 0; i < 100; ++i) {
-          var material = new THREE.MeshBasicMaterial({color: Math.random() * 0xffffff});
-          var cube = new THREE.Mesh(geometry, material);
-          cube.position.set(Math.random() * 100 - 50, Math.random() * 10, Math.random() * 100 - 50);
-          cube.scale.set(1 + Math.random() * 5, 1 + Math.random() * 5, 1 + Math.random() * 5);
-          cube.castShadow = false;
-          cube.receiveShadow = true;
-          this._scene.add(cube);
-        }
+        // // // // // // var geometry = new THREE.BoxGeometry(1, 1, 1);
+        // // // // // // for (var i = 0; i < 100; ++i) {
+        // // // // // //   var material = new THREE.MeshBasicMaterial({color: Math.random() * 0xffffff});
+        // // // // // //   var cube = new THREE.Mesh(geometry, material);
+        // // // // // //   cube.position.set(Math.random() * 100 - 50, Math.random() * 10, Math.random() * 100 - 50);
+        // // // // // //   cube.scale.set(1 + Math.random() * 5, 1 + Math.random() * 5, 1 + Math.random() * 5);
+        // // // // // //   cube.castShadow = false;
+        // // // // // //   cube.receiveShadow = true;
+        // // // // // //   this._scene.add(cube);
+        // // // // // // }
       
 
 
@@ -184,9 +327,13 @@ export const ThreeD_Guy = (() => {
       this._scene.add(plane);
       this._SimpleOrbitControls = new SimpleOrbitControls.SimpleOrbitControls(this._threejs, this._scene, this._BirdViewCAM );
 
+
+      this._RenderCam=this._BirdViewCAM;
+
+
       this._LoadSky();
-     // this._LoadPlayer();
-     this._LoadRemotePlayer();
+     this._LoadPlayer();
+     //this._LoadRemotePlayer("zs");
       this._LoadClouds();
       //this._LoadFoliage();
 
@@ -198,70 +345,11 @@ export const ThreeD_Guy = (() => {
       
       //
 
-    }
-  
-
-    _Beat() {
-      requestAnimationFrame((t) => {
-        if (this._previousBeat === null) {
-          this._previousBeat = t;
-        }
-  
-        this._Beat();
-  
-     
-       
-       // this._threejs.render(this._scene, this._camera);
-        this._Step(t - this._previousBeat);
-        this._previousBeat = t;
-      });
-    }
-  
-    _Step(timeElapsed) {
-      const timeElapsedS = Math.min(1.0 / 30.0, timeElapsed * 0.001);
-      
-      // this._UpdateSun();
-  
-// const h = (async () => {
-      //   this._cli.printPrompt()
-      //   await this._cli.type('echo "Creating Terminal"')
-      //
-      // })()
-      this._UpdateOrbitControls(timeElapsed);
-      if (this._resizeRendererToDisplaySize(this._threejs)) {
-        // ui.UpdateGlider();
-        const canvas = this._threejs.domElement;
-        this._camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        this._camera.updateProjectionMatrix();
-         this._BirdViewCAM.aspect = canvas.clientWidth / canvas.clientHeight;
-         this._BirdViewCAM.updateProjectionMatrix();
-
-
-      }
-
-      this._threejs.render(this._scene, this._BirdViewCAM );    
-      this._input.endFrame();
-
-
-
-      this._entityManager.Update(timeElapsed);
-    }  
-
-
-
-    InitComponent() {
-   //   this._LoadUI();
-     
-      if (this._cli) {
-       // this._inputCli = new StInput(this._cli.container)
-        const h = (async () => {
-          this._cli.printPrompt()
-          await this._cli.type('I am ThreeD Guy , i create cool animations! , and render epic multiplayer games ! ')
-     
-        })()
-
-      }}
     
+    
+    }
+    
+
     Breathe(){
       const h = (async () => {
         this._cli.printPrompt()
@@ -310,7 +398,7 @@ export const ThreeD_Guy = (() => {
       this._UpdateOrbitControls(timeInSeconds);
       if (this._resizeRendererToDisplaySize(this._threejs)) {
 
-        this._cli.Breathe2();
+        //this._cli.Breathe2();
         // ui.UpdateGlider();
         const canvas = this._threejs.domElement;
         this._camera.aspect = canvas.clientWidth / canvas.clientHeight;
@@ -321,7 +409,8 @@ export const ThreeD_Guy = (() => {
 
       }
 
-      this._threejs.render(this._scene, this._BirdViewCAM );    
+    //  this._threejs.render(this._scene, this._BirdViewCAM ); 
+   // this._threejs.render(this._scene,  this._camera );      
       this._input.endFrame();
       
     }
@@ -431,11 +520,11 @@ export const ThreeD_Guy = (() => {
       const params = {
         camera: this._camera,
         scene: this._scene,
-        callback: this.BroadcastEvent({cli: this._cli,id:"_loadplayer"}),
+       // callback: this.BroadcastEvent({cli: this._cli,id:"_loadplayer"}),
         localInputs: this._input,
         renderer: this._threejs,
         cli: this._cli,
-        SetAttention : this.SetAttention
+      //  SetAttention : this.SetAttention
       };
       const girl = new entity.Entity();
       girl.AddComponent(new gltf_component.AnimatedModelComponent({
@@ -621,21 +710,21 @@ export const ThreeD_Guy = (() => {
 
       const npc = new entity.Entity();
       npc.AddComponent(new remotePlayer_entity.NPCController({
-          camera: this._camera,
+          camera: this._BirdViewCAM,
           scene: this._scene,
 
       }));
       npc.AddComponent(new remotePlayer_input.BasicCharacterControllerInput());
 
 
-       npc.AddComponent(
-           new spatial_grid_controller.SpatialGridController({grid: this._grid}));
+        npc.AddComponent(
+            new spatial_grid_controller.SpatialGridController({grid: this._grid}));
 
      //  npc.AddComponent(new attack_controller.AttackController({timing: 0.35}));
       npc.SetPosition(new THREE.Vector3(
-          (Math.random() * 2 - 1) * 7000,
+          (Math.random() * 2 - 1) * 50,
           0,
-          (Math.random() * 2 - 1) * 6900));
+          (Math.random() * 2 - 1) * 40));
        this._entityManager.Add(npc);
 
 

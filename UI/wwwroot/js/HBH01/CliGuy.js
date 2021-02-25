@@ -37,7 +37,7 @@ export const CLI_Guy = (() => {
         this._cli.println();
 
         this._cli.printPrompt()
-        await this._cli.type('and another independent function')
+        await this._cli.type('and another independent function serti ')
         this._cli.printCursor();
 
       })()

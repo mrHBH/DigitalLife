@@ -3,7 +3,7 @@
 // import {entity} from './entity.js';
  import {CLI_Guy} from './CliGuy.js';
  import {Ui_Guy} from './UiGuy.js';
-import {ThreeD_Guy} from './3dGuy.js';
+ import {ThreeD_Guy} from './3dGuy.js';
 //
 // import {spatial_hash_grid} from "./spatial-hash-grid";
 //import {entity_manager} from './entity-manager.js';
@@ -36,7 +36,7 @@ class HBH01 {
    // this.TutorialGuy.AddComponent(new Ui_Guy.Ui_Guy(),'Ui_Guy');
   //  this.TutorialGuy.AddComponent(new ThreeD_Guy.ThreeD_Guy(this._entityManager),'3d_Guy');
    
-  this.CLI_Guy.Breathe2();
+ 
   
 
       // Think of a cell and what it needs to function
